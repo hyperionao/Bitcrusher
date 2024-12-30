@@ -11,7 +11,7 @@ short quantize_to_bit(float sample, int bit_depth) {
     int quantized = (int)(sample * max_value);  // map to range [-max_value, max_value]
     if (quantized > max_value) quantized = max_value;
     if (quantized < -max_value - 1) quantized = -max_value - 1;
-    return (short)(quantized * (32768 / max_value)); // scale back to 16-bit range
+    return (short)(quantized * (32767 / max_value)); // scale back to 16-bit range
 }
 //helper function to process audio in chunks for different factor reductions
 SNDFILE* process_audio_chunks(SNDFILE *sndfile_in, SNDFILE *sndfile_out, float *input_buffer, short *output_buffer, size_t input_buffer_size, size_t output_buffer_size, int sample_rate_reduction_factor, int bit_depth,int input_channels) {
@@ -22,6 +22,11 @@ SNDFILE* process_audio_chunks(SNDFILE *sndfile_in, SNDFILE *sndfile_out, float *
         for (sf_count_t i = 0; i < frames_read; i += sample_rate_reduction_factor) { 
             for (int ch = 0; ch < input_channels; ++ch) {
                 float sample = input_buffer[i * input_channels + ch];
+
+                //DITHERING!!!
+                float dither = ((float)rand() / RAND_MAX) - 0.5f; // Random noise in [-0.5, 0.5]
+                sample += dither / (1 << (bit_depth - 1));        // Scale dither to quantization step
+
                 output_buffer[output_frames * input_channels + ch] = quantize_to_bit(sample, bit_depth);
             }
             output_frames++;
@@ -36,7 +41,7 @@ SNDFILE* process_audio_chunks(SNDFILE *sndfile_in, SNDFILE *sndfile_out, float *
 
 int main() {
     int bit_depth = 6; // Quantization bit depth
-    int sample_rate_reduction_factor = 1; //Partner for 8-bit selection
+    int sample_rate_reduction_factor = 4; //Partner for 8-bit selection
 
     // Open the input file
     SF_INFO sfinfo_in;
@@ -58,8 +63,16 @@ int main() {
 
 
     // Allocate input and output buffers
-    size_t input_buffer_size = sfinfo_in.samplerate * sfinfo_in.channels;
+
+    // Buffers based on sample rate
+    // size_t input_buffer_size = sfinfo_in.samplerate * sfinfo_in.channels;
+    // size_t output_buffer_size = input_buffer_size / sample_rate_reduction_factor;
+
+
+    // Buffers based on frames
+    size_t input_buffer_size = sfinfo_in.frames * sfinfo_in.channels;
     size_t output_buffer_size = input_buffer_size / sample_rate_reduction_factor;
+
     float *input_buffer = (float *)malloc(input_buffer_size * sizeof(float));
     short *output_buffer = (short *)malloc(output_buffer_size * sizeof(short));
 
@@ -85,3 +98,7 @@ int main() {
     printf("Bitcrushing and sample rate reduction completed.\n");
     return 0;
 }
+
+//potential features: dithering and filtering
+//ui for user to select bit depth and sample rate reduction factor
+//python notebook for visualization of audio files
