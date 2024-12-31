@@ -13,37 +13,40 @@ short quantize_to_bit(float sample, int bit_depth) {
     if (quantized < -max_value - 1) quantized = -max_value - 1;
     return (short)(quantized * (32767 / max_value)); // scale back to 16-bit range
 }
+
 //helper function to process audio in chunks for different factor reductions
-SNDFILE* process_audio_chunks(SNDFILE *sndfile_in, SNDFILE *sndfile_out, float *input_buffer, short *output_buffer, size_t input_buffer_size, size_t output_buffer_size, int sample_rate_reduction_factor, int bit_depth,int input_channels) {
+SNDFILE* process_audio_chunks(SNDFILE *sndfile_in, SNDFILE *sndfile_out, float *input_buffer, short *output_buffer, size_t chunk_frames, int sample_rate_reduction_factor, int bit_depth, int input_channels) {
+
     sf_count_t frames_read;
-    while ((frames_read = sf_readf_float(sndfile_in, input_buffer, input_buffer_size / input_channels)) > 0) {
+
+    while ((frames_read = sf_readf_float(sndfile_in, input_buffer, chunk_frames)) > 0) {
         sf_count_t output_frames = 0;
 
-        for (sf_count_t i = 0; i < frames_read; i += sample_rate_reduction_factor) { 
+        for (sf_count_t i = 0; i < frames_read; i += sample_rate_reduction_factor) {
             for (int ch = 0; ch < input_channels; ++ch) {
                 float sample = input_buffer[i * input_channels + ch];
 
-                //DITHERING!!!
+                //  DITHERING!!
                 float dither = ((float)rand() / RAND_MAX) - 0.5f; // Random noise in [-0.5, 0.5]
                 sample += dither / (1 << (bit_depth - 1));        // Scale dither to quantization step
 
+                // Quantize the sample
                 output_buffer[output_frames * input_channels + ch] = quantize_to_bit(sample, bit_depth);
             }
             output_frames++;
         }
-
-        // Write the processed data to the output file
         sf_writef_short(sndfile_out, output_buffer, output_frames);
     }
+
     return sndfile_out;
 }
+
 
 
 int main() {
     int bit_depth = 6; // Quantization bit depth
     int sample_rate_reduction_factor = 4; //Partner for 8-bit selection
 
-    // Open the input file
     SF_INFO sfinfo_in;
     SNDFILE *sndfile_in = sf_open("test.wav", SFM_READ, &sfinfo_in);
     if (!sndfile_in) {
@@ -61,18 +64,9 @@ int main() {
         return 1;
     }
 
-
-    // Allocate input and output buffers
-
-    // Buffers based on sample rate
-    // size_t input_buffer_size = sfinfo_in.samplerate * sfinfo_in.channels;
-    // size_t output_buffer_size = input_buffer_size / sample_rate_reduction_factor;
-
-
-    // Buffers based on frames
-    size_t input_buffer_size = sfinfo_in.frames * sfinfo_in.channels;
+    size_t chunk_frames = 1024; // Number of frames to process per chunk
+    size_t input_buffer_size = chunk_frames * sfinfo_in.channels;
     size_t output_buffer_size = input_buffer_size / sample_rate_reduction_factor;
-
     float *input_buffer = (float *)malloc(input_buffer_size * sizeof(float));
     short *output_buffer = (short *)malloc(output_buffer_size * sizeof(short));
 
@@ -86,9 +80,9 @@ int main() {
     }
 
 
-    // Process audio in chunks
-    sndfile_out = process_audio_chunks(sndfile_in, sndfile_out, input_buffer, output_buffer, input_buffer_size, output_buffer_size, sample_rate_reduction_factor, bit_depth, sfinfo_in.channels);
-
+    // Process audio using our chunks 
+    sndfile_out = process_audio_chunks(sndfile_in, sndfile_out, input_buffer, output_buffer, chunk_frames, sample_rate_reduction_factor, bit_depth, sfinfo_in.channels);
+    
     // Cleanup
     sf_close(sndfile_in);
     sf_close(sndfile_out);
@@ -99,6 +93,5 @@ int main() {
     return 0;
 }
 
-//potential features: dithering and filtering
+//potential features: filtering
 //ui for user to select bit depth and sample rate reduction factor
-//python notebook for visualization of audio files
