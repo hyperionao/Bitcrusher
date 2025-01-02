@@ -1,6 +1,8 @@
 #include <sndfile.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "lowpasscoefs.cpp"
+#include "FIRFilter.cpp"
 
 //just reminders for goals: 8 bit -> 4th factor reduction, 16 bit -> 2nd factor reduction, 12 bit -> 4th factor reduction, 
 // 4 bit -> 8th factor reduction, 2 bit -> 16th factor reduction
@@ -47,12 +49,20 @@ int main() {
     int bit_depth = 6; // Quantization bit depth
     int sample_rate_reduction_factor = 4; //Partner for 8-bit selection
 
+
     SF_INFO sfinfo_in;
     SNDFILE *sndfile_in = sf_open("test.wav", SFM_READ, &sfinfo_in);
     if (!sndfile_in) {
         fprintf(stderr, "Error opening input file: %s\n", sf_strerror(NULL));
         return 1;
     }
+
+    //calculate low pass filter coefficients
+    float originalSampleRate = sfinfo_in.samplerate;
+    float newSampleRate = originalSampleRate / sample_rate_reduction_factor;
+    float cutoffFrequency = (newSampleRate / 2) / originalSampleRate; // Nyquist frequency
+    size_t filterLength = 51; // Number of coefficients (odd for symmetry)
+    std::vector<float> coefficients = calculateLowPassCoefficients(cutoffFrequency, filterLength);
 
     // Configure output file
     SF_INFO sfinfo_out = sfinfo_in;
