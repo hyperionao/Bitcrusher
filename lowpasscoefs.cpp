@@ -49,20 +49,20 @@ std::vector<float> calculateLowPassCoefficients(
     return coefficients;
 }
 
-int main() {
-    float originalSampleRate = 44100.0f; 
-    int reductionFactor = 4;        
-    float newSampleRate = originalSampleRate / reductionFactor;
+// int main() {
+//     float originalSampleRate = 44100.0f; 
+//     int reductionFactor = 4;        
+//     float newSampleRate = originalSampleRate / reductionFactor;
 
-    float cutoffFrequency = (newSampleRate / 2) / originalSampleRate; // Nyquist frequency
-    size_t filterLength = 51; // Number of coefficients (odd for symmetry)
+//     float cutoffFrequency = (newSampleRate / 2) / originalSampleRate; // Nyquist frequency
+//     size_t filterLength = 51; // Number of coefficients (odd for symmetry)
 
-    std::vector<float> coefficients = calculateLowPassCoefficients(cutoffFrequency, filterLength);
+//     std::vector<float> coefficients = calculateLowPassCoefficients(cutoffFrequency, filterLength);
 
-    std::cout << "Low-Pass Filter Coefficients:" << std::endl;
-    for (size_t i = 0; i < coefficients.size(); ++i) {
-        std::cout << "c[" << i << "] = " << coefficients[i] << std::endl;
-    }
+//     std::cout << "Low-Pass Filter Coefficients:" << std::endl;
+//     for (size_t i = 0; i < coefficients.size(); ++i) {
+//         std::cout << "c[" << i << "] = " << coefficients[i] << std::endl;
+//     }
 
-    return 0;
-}
+//     return 0;
+// }

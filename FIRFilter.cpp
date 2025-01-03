@@ -24,3 +24,20 @@ float* firFilter(FilterInput& input){
     }
     return y;
 }
+
+// int main(){
+//     //example
+//     float x[5] = {1, 2, 3, 4, 5};
+//     float c[3] = {0.1, 0.2, 0.3};
+//     float y[5] = {0};
+
+//     FilterInput input = {x, 5, c, 3, y, 5};
+//     firFilter(input);
+
+//     for (auto i = 0u; i < 5; ++i){
+//         std::cout << y[i] << " ";
+//     }
+//     std::cout << std::endl;
+
+//     return 0;
+// }
