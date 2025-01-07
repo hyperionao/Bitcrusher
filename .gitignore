@@ -1,0 +1,4 @@
+.vscode/*
+##ignore output.wav, test_bitcrusher.exe
+output.wav
+test_bitcrusher.exe
