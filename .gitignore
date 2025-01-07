@@ -1,4 +1,6 @@
 .vscode/*
-##ignore output.wav, test_bitcrusher.exe
-output.wav
+build/*
+out/*
 test_bitcrusher.exe
+src/main.cpp
+output.wav
