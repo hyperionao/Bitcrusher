@@ -5,8 +5,8 @@
 int main() {
     try {
         // Test parameters
-        int bitDepth = 6; // Bit depth for quantization
-        int sampleRateReductionFactor = 4; // Factor by which the sample rate is reduced
+        int bitDepth = 8; // Bit depth for quantization
+        int sampleRateReductionFactor = 6; // Factor by which the sample rate is reduced
         std::string inputPath = "C:/Users/krono/Desktop/Repos/Bitcrusher/Bitcrusher/test.wav"; // Full path to input
         std::string outputPath = "C:/Users/krono/Desktop/Repos/Bitcrusher/Bitcrusher/output.wav"; // Full path to output
 
